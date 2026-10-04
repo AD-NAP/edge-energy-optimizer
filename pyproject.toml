@@ -1,0 +1,10 @@
+[project]
+name = "edge-energy-optimizer"
+version = "0.1.0"
+description = "Forecast building energy load, control a simulated building, and shave peak demand from an edge cluster."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = []

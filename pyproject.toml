@@ -4,7 +4,17 @@ version = "0.1.0"
 description = "Forecast building energy load, control a simulated building, and shave peak demand from an edge cluster."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "matplotlib>=3.11.2",
+    "pandas>=3.0.6",
+    "scikit-learn>=1.9.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [dependency-groups]
-dev = []
+dev = [
+    "pytest>=9.1.1",
+]

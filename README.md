@@ -17,7 +17,47 @@ Everything runs against simulators, so you need no physical building, meter, or 
 
 ## Status
 
-Scaffold only. No application code yet. Phase 1 is next.
+Phase 1 (load forecasting) is complete. Phase 2 is next.
+
+## Phase 1 results
+
+The forecaster predicts each hour of the next day for one real office building (`Hog_office_Shawnna` from the [Building Data Genome Project 2](https://github.com/buds-lab/building-data-genome-project-2)). It is trained on 2016 and scored on all of 2017, which it never saw.
+
+| Forecast | MAE on 2017 | Share of average load |
+| --- | --- | --- |
+| Same hour yesterday | 59.5 kWh | 15.0% |
+| Same hour last week | 45.7 kWh | 11.5% |
+| **Model (gradient boosted trees)** | **34.5 kWh** | **8.7%** |
+
+The model's error is 24.5% lower than the best naive baseline.
+
+![One test week of actual load, model forecast, and baseline](docs/img/forecast_week.png)
+
+Known limits:
+
+- **It guesses high.** Average error is +13.8 kWh, because the building used about 8% less in 2017 than in the training year. Regular retraining would be needed in live use.
+- **Holidays are the weak spot.** MAE on holidays is 61.9 kWh, against 32.6 on normal weekdays. One training year has too few holidays to learn from.
+- **Weather is measured, not forecast.** A live system would use weather forecasts, which are less accurate, so real errors would be somewhat higher.
+
+## Running phase 1
+
+```bash
+uv run python scripts/download_data.py
+```
+
+That downloads about 195 MB into `data/raw/`. Then each step can be run on its own:
+
+| Command | What it does |
+| --- | --- |
+| `uv run python -m edge_energy_optimizer.forecasting.explore` | Charts the load patterns |
+| `uv run python -m edge_energy_optimizer.forecasting.baseline` | Scores the naive baselines |
+| `uv run python -m edge_energy_optimizer.forecasting.model` | Trains and saves the model |
+| `uv run python -m edge_energy_optimizer.forecasting.evaluate` | Scores the model against the baselines |
+| `uv run python -m edge_energy_optimizer.forecasting.analyze` | Breaks the errors down by month and day type |
+| `uv run python -m edge_energy_optimizer.forecasting.forecast` | Forecasts one example day |
+| `uv run pytest` | Runs the tests (no download needed) |
+
+Other code gets a forecast by calling `forecast()` in `src/edge_energy_optimizer/forecasting/forecast.py`.
 
 ## Setup
 
@@ -56,7 +96,7 @@ Always commit `pyproject.toml` and `uv.lock` together. Never edit `uv.lock` by h
 
 | Phase | What gets built | Target |
 | --- | --- | --- |
-| 1 | Energy load forecasting (ML) | Sunday 11 October 2026 |
+| 1 | Energy load forecasting (ML) | Done |
 | 2 | Control logic tested against a simulated building (BOPTEST) | Sunday 11 October 2026 |
 | 3 | BACnet and Modbus protocol integration | TBD |
 | 4 | Peak demand shaving with a simulated battery | TBD |
@@ -70,13 +110,19 @@ Each phase builds on the one before it and should leave the repo in a working, d
 edge-energy-optimizer/
 ├── docs/
 │   ├── architecture.md   # the 5-phase vision and how the parts connect
-│   └── decisions/        # architecture decision records (ADRs)
+│   ├── decisions/        # architecture decision records (ADRs)
+│   └── img/              # charts produced by the code
+├── scripts/
+│   └── download_data.py  # fetches the dataset into data/raw/
+├── src/edge_energy_optimizer/
+│   └── forecasting/      # phase 1: dataset, features, model, evaluation
+├── tests/
 ├── pyproject.toml        # project metadata and dependencies
 ├── .python-version       # Python version uv installs
 └── README.md
 ```
 
-Source and test folders are added when phase 1 starts.
+`data/` and `models/` are created locally and are not committed.
 
 ## Glossary
 

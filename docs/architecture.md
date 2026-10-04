@@ -35,6 +35,8 @@ Each phase adds or hardens one part of this loop.
 
 A machine learning model that predicts building load over a short horizon (hours to a day ahead) from historical load, weather, and calendar features. Output is a forecast the controller can consume, plus an honest evaluation against a naive baseline.
 
+Status: done. Gradient boosted trees forecast each hour of the next day, exposed through `forecast()` in `src/edge_energy_optimizer/forecasting/forecast.py`. Choices are recorded in [decisions/0002](decisions/0002-forecasting-data-and-model.md) and results are in the README.
+
 ### Phase 2: Control logic against a simulated building
 
 A controller that uses the forecast to choose HVAC setpoints. It is tested against [BOPTEST](https://ibpsa.github.io/project1-boptest/), which runs a physics-based building model in Docker behind a REST API and scores each run on energy, cost, and comfort KPIs. The result is compared against BOPTEST's built-in baseline controller.
@@ -74,7 +76,6 @@ The components are packaged as containers and deployed to a k3s cluster. MQTT ca
 
 ## Open questions
 
-- Which dataset and model family for forecasting (phase 1).
 - Which BOPTEST test case, and rule-based control versus MPC (phase 2).
 - Which Python libraries for BACnet and Modbus (phase 3).
 - Dashboard technology (phase 5).

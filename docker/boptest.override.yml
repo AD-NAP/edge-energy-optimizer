@@ -1,0 +1,23 @@
+# Applied on top of external/boptest/docker-compose.yml.
+#
+# BOPTEST v0.9.0 pins minio/minio and minio/mc, which MinIO deleted from
+# Docker Hub in September 2026. These are Chainguard's builds of the same
+# two programs. The mc entrypoint is the upstream one with `mc alias set`
+# in place of the removed `mc config host add`.
+services:
+  minio:
+    image: cgr.dev/chainguard/minio:latest
+  mc:
+    image: cgr.dev/chainguard/minio-client:latest-dev
+    environment:
+      - HOME=/tmp
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      mc mb myminio/boptest;
+      mc anonymous set public myminio/boptest;
+      mc anonymous set download myminio/boptest/testcases;
+      mc anonymous set download myminio/boptest/tests;
+      mc admin user svcacct add --access-key ${AWS_ACCESS_KEY_ID} --secret-key ${AWS_SECRET_ACCESS_KEY} myminio ${MINIO_ROOT_USER};
+      "

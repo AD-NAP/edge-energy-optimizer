@@ -17,7 +17,7 @@ Everything runs against simulators, so you need no physical building, meter, or 
 
 ## Status
 
-Phase 1 (load forecasting) is complete. Phase 2 is next.
+Phases 1 (load forecasting) and 2 (control against a simulated building) are complete. Phase 3 is next.
 
 ## Phase 1 results
 
@@ -39,6 +39,21 @@ Known limits:
 - **Holidays are the weak spot.** MAE on holidays is 61.9 kWh, against 32.6 on normal weekdays. One training year has too few holidays to learn from.
 - **Weather is measured, not forecast.** A live system would use weather forecasts, which are less accurate, so real errors would be somewhat higher.
 
+## Phase 2 results
+
+A predictive controller heats a simulated family home (BOPTEST test case `bestest_hydronic_heat_pump`). It looks 24 hours ahead, stops heating while the home is empty, reheats before people return, and stores heat when electricity is cheap. The baseline is a thermostat fixed at 21.2 °C. Each run covers two weeks.
+
+| Scenario | Cost, baseline | Cost, predictive | Saved | Discomfort, baseline | Discomfort, predictive |
+| --- | --- | --- | --- | --- | --- |
+| Coldest period, day/night tariff | 174.16 EUR | 152.23 EUR | 12.6% | 1.49 Kh | 1.53 Kh |
+| Coldest period, spot prices | 179.56 EUR | 153.83 EUR | 14.3% | 1.49 Kh | 0.84 Kh |
+| Typical period, day/night tariff | 92.49 EUR | 82.95 EUR | 10.3% | 7.08 Kh | 6.70 Kh |
+| Typical period, spot prices | 85.81 EUR | 72.44 EUR | 15.6% | 7.08 Kh | 6.71 Kh |
+
+![Cost, energy, and discomfort for both controllers](docs/img/phase2_kpis.png)
+
+Most of the saving comes from not heating an empty home, and the settings were tuned on these same scenarios. The full summary and its limits are in [docs/results/phase2.md](docs/results/phase2.md).
+
 ## Running phase 1
 
 ```bash
@@ -58,6 +73,35 @@ That downloads about 195 MB into `data/raw/`. Then each step can be run on its o
 | `uv run pytest` | Runs the tests (no download needed) |
 
 Other code gets a forecast by calling `forecast()` in `src/edge_energy_optimizer/forecasting/forecast.py`.
+
+## Running phase 2
+
+Phase 2 needs BOPTEST running locally. Start Docker Desktop, then get BOPTEST once:
+
+```bash
+git clone --depth 1 --branch v0.9.0 https://github.com/ibpsa/project1-boptest.git external/boptest
+```
+
+Start it from the repo root. The first start builds the images and takes several minutes:
+
+```bash
+docker compose --project-directory external/boptest -f external/boptest/docker-compose.yml -f docker/boptest.override.yml up -d web worker provision
+```
+
+BOPTEST then answers on `http://127.0.0.1:80`. The override file swaps the MinIO images BOPTEST pins, which no longer exist on Docker Hub (see [decision 0003](docs/decisions/0003-control-strategy.md)).
+
+| Command | What it does |
+| --- | --- |
+| `uv run python -m edge_energy_optimizer.control.experiment` | Runs both controllers on all four scenarios (about 3 minutes) and saves the results |
+| `uv run python -m edge_energy_optimizer.control.report` | Draws the charts from the saved results |
+
+Stop BOPTEST when done:
+
+```bash
+docker compose --project-directory external/boptest -f external/boptest/docker-compose.yml -f docker/boptest.override.yml down
+```
+
+A new control strategy is a class with a `setpoint_c(observation, forecast)` method, added to `CONTROLLERS` in `src/edge_energy_optimizer/control/experiment.py`. See `src/edge_energy_optimizer/control/base.py`.
 
 ## Setup
 
@@ -97,7 +141,7 @@ Always commit `pyproject.toml` and `uv.lock` together. Never edit `uv.lock` by h
 | Phase | What gets built | Target |
 | --- | --- | --- |
 | 1 | Energy load forecasting (ML) | Done |
-| 2 | Control logic tested against a simulated building (BOPTEST) | Sunday 11 October 2026 |
+| 2 | Control logic tested against a simulated building (BOPTEST) | Done |
 | 3 | BACnet and Modbus protocol integration | TBD |
 | 4 | Peak demand shaving with a simulated battery | TBD |
 | 5 | Edge deployment on k3s with MQTT and a dashboard | TBD |
@@ -111,23 +155,29 @@ edge-energy-optimizer/
 ├── docs/
 │   ├── architecture.md   # the 5-phase vision and how the parts connect
 │   ├── decisions/        # architecture decision records (ADRs)
+│   ├── results/          # result summaries and KPI tables
 │   └── img/              # charts produced by the code
+├── docker/               # compose override for running BOPTEST
+├── external/             # BOPTEST checkout (not committed)
 ├── scripts/
 │   └── download_data.py  # fetches the dataset into data/raw/
 ├── src/edge_energy_optimizer/
-│   └── forecasting/      # phase 1: dataset, features, model, evaluation
+│   ├── forecasting/      # phase 1: dataset, features, model, evaluation
+│   └── control/          # phase 2: controllers, BOPTEST client, experiments
 ├── tests/
 ├── pyproject.toml        # project metadata and dependencies
 ├── .python-version       # Python version uv installs
 └── README.md
 ```
 
-`data/` and `models/` are created locally and are not committed.
+`data/`, `models/`, and `external/` are created locally and are not committed.
 
 ## Glossary
 
 - **Load forecasting**: predicting future power demand from history, weather, and calendar features.
 - **BOPTEST**: an open source framework that runs a physics-based building model in Docker and exposes it over a REST API, so control strategies can be tested and scored fairly.
+- **Setback**: letting the temperature drift while a building is empty, to save energy.
+- **MPC (model predictive control)**: control that uses a model of the building to simulate and optimize a plan, then re-plans every step.
 - **BACnet**: the standard protocol for building automation equipment such as HVAC controllers.
 - **Modbus**: a simple, older protocol common on meters, inverters, and batteries.
 - **Peak shaving**: discharging a battery (or reducing load) when demand is high so the grid sees a flatter profile.

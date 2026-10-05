@@ -1,11 +1,13 @@
 # edge-energy-optimizer
 
-Building energy optimization in 5 phases. Phase 1 (load forecasting) is done, phase 2 (control against BOPTEST) is next. Phases 1 and 2 are due Sunday 11 October 2026.
+Building energy optimization in 5 phases. Phases 1 (load forecasting) and 2 (control against BOPTEST) are done, phase 3 (BACnet and Modbus) is next. Phases 1 and 2 are due Sunday 11 October 2026.
 
 ## Where things are
 - Vision and phases: `docs/architecture.md`. Choices made so far: `docs/decisions/`.
 - Commands for every pipeline step, and the phase 1 results and known limits: `README.md`.
 - Other phases get a forecast through `forecast()` in `src/edge_energy_optimizer/forecasting/forecast.py`.
+- Controllers implement `setpoint_c(observation, forecast)` from `src/edge_energy_optimizer/control/base.py`. Phase 2 results: `docs/results/phase2.md`.
+- BOPTEST lives in `external/boptest` (gitignored) and must be started with `docker/boptest.override.yml`. Commands are in the README.
 - `data/` and `models/` are gitignored. Recreate them with `scripts/download_data.py` (195 MB) and the `forecasting.model` module.
 
 ## Conventions
@@ -20,6 +22,7 @@ Building energy optimization in 5 phases. Phase 1 (load forecasting) is done, ph
 ## Working mode
 Claude builds in small steps. Before moving on, explain the one new concept with an analogy and ask a few quick check questions. Learning notes go in the vault (`../../vault/learning/`), not in this repo.
 
-## Phase 2 watch-outs
-- The forecaster is trained on a real building, not the BOPTEST one. Retrain the same pipeline on BOPTEST data if the controller needs a load forecast.
-- Still open: which BOPTEST test case, and rule-based control or MPC.
+## Watch-outs
+- The forecaster is trained on a real building, not the BOPTEST one, and phase 2 does not use it. Retrain the same pipeline on BOPTEST data when a later phase needs a load forecast.
+- The predictive controller's settings were tuned on the scenarios it is reported on. Rerun the experiment and say so when changing them.
+- Still open: whether to add an MPC controller.

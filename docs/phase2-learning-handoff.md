@@ -17,25 +17,21 @@ Written on 5 October 2026 so a new Claude session, on any device, can continue t
 | 1 | The emulator is turn-based: `advance` moves time, `forecast` looks ahead, `kpi` scores | Chess server | Nothing |
 | 2 | An interface (`Protocol`) keeps controllers independent of BOPTEST | Wall socket | A new controller goes in its own file, and only the runner's list changes. Controllers return Celsius so BOPTEST names stay in the runner |
 | 3 | Look-ahead heuristic versus MPC, and receding horizon | Rules of thumb versus a GPS, then walking with a flashlight | `preheat_hours` is a fixed setting. Preheating starts when the occupied hour slides into the window, not because anything was re-estimated |
-| 4 | Tuning on your own exam (over-tuning) | Retaking the same marked paper | Explained, questions not answered yet |
+| 4 | Tuning on your own exam (over-tuning) | Retaking the same marked paper | Ten precise thresholds are worse because of how many knobs there are and how precise they are. Custom start dates give an unseen test only if nothing is tuned on them |
+| 5 | Test-driven development | Skewer test before baking | Watching a test fail also catches a wrong test, not only code that already exists |
+| 6 | Fakes and dependency injection | Crash test dummy | `sent` records what was sent, not when. A missing `stop()` is caught by the test's `assert client.stopped`, because tests only ever use the fake |
+| 7 | Reading the KPIs and charts | Final score versus match replay | The predictive controller is fixed rules, not a learned model with training data. The price rule shifts when heat is bought, not how much. Peak power: the learner ran out of time, so the answer was given (reheating after 0 kW stretches) |
 
 Smaller ideas covered without their own questions: "occupied" means people at home (the building is a house, so it is empty on weekday daytimes), setback, thermal discomfort in kelvin-hours, and why a flat price must never trigger the boost.
 
-## Start here: open questions for concept 4
+## Start here
 
-1. Why is the improvement from the mild-day rule less trustworthy than the phase 1 forecast score?
-2. Which is the bigger warning sign of over-tuning: one rule with a round threshold, or ten rules with thresholds like 9.73?
-3. The controller could be run from a custom start date through `PUT /initialize`, outside the two official periods. How would that help?
-
-Background for checking the answers: the 10 °C mild-day threshold was picked after seeing which days overheated in the first run, and the results are reported on those same scenarios. Phase 1 trained on 2016 and scored on 2017.
+Concept 8, attribution by ablation. Learning notes for concepts 4 to 7 were drafted on 7 October and handed to the learner to copy into the vault.
 
 ## Concepts still to teach, in this order
 
-1. **Test-driven development.** It was done three times (tests failed, then passed) but never taught. Use `tests/test_control.py` and `src/edge_energy_optimizer/control/predictive.py`.
-2. **Fakes.** `FakeBoptest` in `tests/test_experiment.py` stands in for the emulator. Explain why that makes the tests fast and independent of Docker.
-3. **Reading the KPIs and charts.** Check that the learner can read `docs/img/phase2_temperature_peak_heat_day.png` and `docs/img/phase2_power_peak_heat_day.png` unaided: where setback, preheating, and price shifting show up.
-4. **Attribution by ablation.** The price boost was switched off (`boost_c=0`) to split the saving into setback and price. Numbers are in the "How it saves money" table of `docs/results/phase2.md`.
-5. **MPC in more depth** (thermal model, optimizer). Only needed if the MPC controller gets built.
+1. **Attribution by ablation.** The price boost was switched off (`boost_c=0`) to split the saving into setback and price. Numbers are in the "How it saves money" table of `docs/results/phase2.md`.
+2. **MPC in more depth** (thermal model, optimizer). Only needed if the MPC controller gets built.
 
 ## Work left
 

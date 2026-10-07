@@ -27,16 +27,27 @@ Smaller ideas covered without their own questions: "occupied" means people at ho
 
 ## Start here
 
-Concepts 1 to 8 are taught and their notes are in the vault (`learning/`). The only concept left is MPC in more depth, and only if the learner decides to build the MPC controller. Ask that first.
+Concepts 1 to 8 are taught and their notes are in the vault (`learning/`).
 
-## Concepts still to teach, in this order
+The learner decided on 7 October to build the MPC controller on **Friday 9 October 2026**, on the home PC. Teach MPC in more depth alongside the build, one concept at a time as usual. Do not merge `phase-2` into `main` until the learner asks. The learner asked to hold off.
 
-1. **MPC in more depth** (thermal model, optimizer). Only needed if the MPC controller gets built.
+## Concepts still to teach
+
+1. **MPC in more depth**: the thermal model (how the house stores and loses heat), and the optimizer (choosing a whole plan of setpoints to minimise cost within comfort, then applying only the first step). Teach it while building, not beforehand.
+
+## Plan for Friday
+
+1. Fit a simple thermal model from `data/phase2/` (home PC only). Report its fit against a naive baseline.
+2. Build `MPCController` in its own file under `src/edge_energy_optimizer/control/`, implementing `setpoint_c(observation, forecast)`. Test-driven, with `fake_forecast`. Add it to the runner's controller list.
+3. Run the experiment against BOPTEST and report it next to the baseline and the predictive controller in `docs/results/phase2.md`.
+4. Do not tune MPC on the reported scenarios (concept 4). If its settings are tuned, also run it on custom start dates through `PUT /initialize` that were not used for tuning, and say so.
+5. Record the MPC decision in `docs/decisions/`, and update the "Still open" line in `CLAUDE.md`.
 
 ## Work left
 
 | Item | Where | Notes |
 | --- | --- | --- |
-| Learning notes for each concept | The vault repo, `learning/`, one file per concept, from `templates/learning.md` | Write each one after its questions are answered, so it reflects what was actually understood |
-| MPC controller | `src/edge_energy_optimizer/control/` | Optional. Needs BOPTEST, so home PC only. Phases 1 and 2 are due 11 October 2026 |
-| Merge `phase-2` into `main` | GitHub | When the learner asks |
+| Learning note for MPC | The vault repo, `learning/`, from `templates/learning.md` | Write it after its questions are answered |
+| MPC controller | `src/edge_energy_optimizer/control/` | Friday 9 October, home PC (needs BOPTEST and `data/phase2/`). Phases 1 and 2 are due 11 October 2026 |
+| Merge `phase-2` into `main` | GitHub | On hold until the learner asks |
+| Delete this file | `docs/phase2-learning-handoff.md` | When the MPC teaching is finished |

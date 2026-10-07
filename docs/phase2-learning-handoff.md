@@ -21,17 +21,17 @@ Written on 5 October 2026 so a new Claude session, on any device, can continue t
 | 5 | Test-driven development | Skewer test before baking | Watching a test fail also catches a wrong test, not only code that already exists |
 | 6 | Fakes and dependency injection | Crash test dummy | `sent` records what was sent, not when. A missing `stop()` is caught by the test's `assert client.stopped`, because tests only ever use the fake |
 | 7 | Reading the KPIs and charts | Final score versus match replay | The predictive controller is fixed rules, not a learned model with training data. The price rule shifts when heat is bought, not how much. Peak power: the learner ran out of time, so the answer was given (reheating after 0 kW stretches) |
+| 8 | Attribution by ablation | Muting one instrument on a mixing desk | Muting setback keeps the house warm all day, it does not mean heating only when cheap. Did not know what a day/night tariff is, so it was explained. Shares depend on removal order (interaction). A timer thermostat is the tougher baseline |
 
 Smaller ideas covered without their own questions: "occupied" means people at home (the building is a house, so it is empty on weekday daytimes), setback, thermal discomfort in kelvin-hours, and why a flat price must never trigger the boost.
 
 ## Start here
 
-Concept 8, attribution by ablation. Learning notes for concepts 4 to 7 are in the vault (`learning/tuning-on-your-own-exam.md`, `test-driven-development.md`, `fakes.md`, `reading-kpis-and-charts.md`). Notes for concepts 1 to 3 are being written in a separate session.
+Concepts 1 to 8 are taught and their notes are in the vault (`learning/`). The only concept left is MPC in more depth, and only if the learner decides to build the MPC controller. Ask that first.
 
 ## Concepts still to teach, in this order
 
-1. **Attribution by ablation.** The price boost was switched off (`boost_c=0`) to split the saving into setback and price. Numbers are in the "How it saves money" table of `docs/results/phase2.md`.
-2. **MPC in more depth** (thermal model, optimizer). Only needed if the MPC controller gets built.
+1. **MPC in more depth** (thermal model, optimizer). Only needed if the MPC controller gets built.
 
 ## Work left
 

@@ -20,7 +20,7 @@ Building energy optimization in 5 phases. Phases 1 (load forecasting) and 2 (con
 - One branch per phase. Commit only when asked.
 
 ## Working mode
-Claude builds in small steps. Before moving on, explain the one new concept with an analogy and ask a few quick check questions. Learning notes go in the vault (`../../vault/learning/`), not in this repo.
+Claude builds in small steps. Before moving on, explain the one new concept with an analogy and ask a few quick check questions. Learning notes go in the vault (`../../vault/learning/<topic>/`), not in this repo.
 
 ## Watch-outs
 - The forecaster is trained on a real building, not the BOPTEST one, and phase 2 does not use it. Retrain the same pipeline on BOPTEST data when a later phase needs a load forecast.

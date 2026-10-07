@@ -27,7 +27,7 @@ Smaller ideas covered without their own questions: "occupied" means people at ho
 
 ## Start here
 
-Concepts 1 to 8 are taught and their notes are in the vault (`learning/`).
+Concepts 1 to 8 are taught and their notes are in the vault (`learning/<topic>/`).
 
 The learner decided on 7 October to build the MPC controller on **Friday 9 October 2026**, on the home PC. Teach MPC in more depth alongside the build, one concept at a time as usual. Do not merge `phase-2` into `main` until the learner asks. The learner asked to hold off.
 
@@ -47,7 +47,7 @@ The learner decided on 7 October to build the MPC controller on **Friday 9 Octob
 
 | Item | Where | Notes |
 | --- | --- | --- |
-| Learning note for MPC | The vault repo, `learning/`, from `templates/learning.md` | Write it after its questions are answered |
+| Learning note for MPC | The vault repo, `learning/<topic>/`, from `templates/learning.md` | Write it after its questions are answered |
 | MPC controller | `src/edge_energy_optimizer/control/` | Friday 9 October, home PC (needs BOPTEST and `data/phase2/`). Phases 1 and 2 are due 11 October 2026 |
 | Merge `phase-2` into `main` | GitHub | On hold until the learner asks |
 | Delete this file | `docs/phase2-learning-handoff.md` | When the MPC teaching is finished |

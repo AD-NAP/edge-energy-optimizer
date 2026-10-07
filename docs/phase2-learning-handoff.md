@@ -26,7 +26,7 @@ Smaller ideas covered without their own questions: "occupied" means people at ho
 
 ## Start here
 
-Concept 8, attribution by ablation. Learning notes for concepts 4 to 7 were drafted on 7 October and handed to the learner to copy into the vault.
+Concept 8, attribution by ablation. Learning notes for concepts 4 to 7 are in the vault (`learning/tuning-on-your-own-exam.md`, `test-driven-development.md`, `fakes.md`, `reading-kpis-and-charts.md`). Notes for concepts 1 to 3 are being written in a separate session.
 
 ## Concepts still to teach, in this order
 

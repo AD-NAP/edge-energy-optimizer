@@ -41,17 +41,20 @@ Status: done. Gradient boosted trees forecast each hour of the next day, exposed
 
 A controller that chooses HVAC setpoints. It is tested against [BOPTEST](https://ibpsa.github.io/project1-boptest/), which runs a physics-based building model in Docker behind a REST API and scores each run on energy, cost, and comfort KPIs.
 
-Status: done. A look-ahead heuristic cuts heating cost by 10% to 16% against a fixed-setpoint thermostat, with comfort no worse. Choices are recorded in [decisions/0003](decisions/0003-control-strategy.md) and results are in [results/phase2.md](results/phase2.md).
+Status: done. A look-ahead heuristic cuts heating cost by 10% to 16% against a fixed-setpoint thermostat, with comfort no worse. A model predictive controller (MPC) cuts it by 14% to 20% on two unseen periods, 3% to 8% below the heuristic. Choices are recorded in [decisions/0003](decisions/0003-control-strategy.md) and [decisions/0004](decisions/0004-mpc-controller.md), and results are in [results/phase2.md](results/phase2.md).
 
 The code in `src/edge_energy_optimizer/control/` has three parts:
 
 ```
 experiment.py (runner) ──► Controller.setpoint_c(observation, forecast) ──► °C
       │                         ├── FixedSetpointController   (baseline.py)
-      │                         └── PredictiveController      (predictive.py)
+      │                         ├── PredictiveController      (predictive.py)
+      │                         └── MPCController             (mpc.py) ──► ThermalModel (thermal_model.py)
       ▼
 boptest.py (REST client) ──► BOPTEST in Docker
 ```
+
+The MPC's thermal model is fitted from data that `identify.py` collects by driving the heat pump directly.
 
 - **Controllers** see an observation and a forecast and return a setpoint in °C. They know nothing about BOPTEST, so phase 3 can put BACnet underneath them unchanged.
 - **The runner** owns the loop: get a forecast, ask the controller, advance the building one hour, repeat. It also translates between BOPTEST's point names and units and the controller's.
@@ -92,6 +95,5 @@ The components are packaged as containers and deployed to a k3s cluster. MQTT ca
 
 ## Open questions
 
-- Whether to add an MPC controller next to the heuristic (phase 2 follow-up).
 - Which Python libraries for BACnet and Modbus (phase 3).
 - Dashboard technology (phase 5).

@@ -167,6 +167,7 @@ Each phase builds on the one before it and should leave the repo in a working, d
 edge-energy-optimizer/
 ├── docs/
 │   ├── architecture.md   # the 5-phase vision and how the parts connect
+│   ├── learning.md       # every mistake so far, how it was fixed, and the lesson
 │   ├── decisions/        # architecture decision records (ADRs)
 │   ├── results/          # result summaries and KPI tables
 │   └── img/              # charts produced by the code

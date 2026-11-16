@@ -10,10 +10,13 @@ class BoptestClient:
     def __init__(self, url: str = DEFAULT_URL) -> None:
         self._url = url
         self._testid: str | None = None
+        # One kept-alive connection for every call. A fresh connection per call leaves
+        # thousands of closed sockets waiting to time out, and Windows runs out of ports.
+        self._http = requests.Session()
 
     def select(self, testcase: str) -> None:
         """Start a fresh copy of a test case. Every later call talks to that copy."""
-        response = requests.post(f"{self._url}/testcases/{testcase}/select", timeout=TIMEOUT_S)
+        response = self._http.post(f"{self._url}/testcases/{testcase}/select", timeout=TIMEOUT_S)
         response.raise_for_status()
         self._testid = response.json()["testid"]
 
@@ -24,6 +27,15 @@ class BoptestClient:
             "electricity_price": electricity_price,
         })
         return payload["time_period"]
+
+    def set_price(self, electricity_price: str) -> None:
+        """Pick the price scenario without jumping to a time period."""
+        self._call("put", "scenario", {"electricity_price": electricity_price})
+
+    def initialize(self, start_s: float, warmup_s: float) -> dict:
+        """Jump to any start time, after simulating `warmup_s` seconds under the default
+        controls so the building is not stone cold. Returns the first measurements."""
+        return self._call("put", "initialize", {"start_time": start_s, "warmup_period": warmup_s})
 
     def forecast(self, point_names: list[str], horizon_s: float, interval_s: float) -> dict:
         return self._call("put", "forecast", {
@@ -47,10 +59,10 @@ class BoptestClient:
         return self._call("get", "kpi")
 
     def stop(self) -> None:
-        requests.put(f"{self._url}/stop/{self._testid}", timeout=TIMEOUT_S).raise_for_status()
+        self._http.put(f"{self._url}/stop/{self._testid}", timeout=TIMEOUT_S).raise_for_status()
 
     def _call(self, method: str, endpoint: str, body: dict | None = None) -> dict:
-        response = requests.request(
+        response = self._http.request(
             method, f"{self._url}/{endpoint}/{self._testid}", json=body, timeout=TIMEOUT_S
         )
         response.raise_for_status()

@@ -20,7 +20,16 @@ class FakeBoptest:
     def set_scenario(self, time_period: str, electricity_price: str) -> dict:
         return {"time": self.time_s, "reaTZon_y": 294.15}
 
+    def set_price(self, electricity_price: str) -> None:
+        self.price = electricity_price
+
+    def initialize(self, start_s: float, warmup_s: float) -> dict:
+        self.initialized = start_s
+        self.time_s = start_s
+        return {"time": self.time_s, "reaTZon_y": 294.15}
+
     def forecast(self, point_names: list[str], horizon_s: float, interval_s: float) -> dict:
+        self.forecast_starts = getattr(self, "forecast_starts", []) + [self.time_s]
         times = [self.time_s + i * HOUR for i in range(int(horizon_s / interval_s) + 1)]
         values = {"TDryBul": 278.15, "LowerSetp[1]": 294.15, "UpperSetp[1]": 297.15}
         payload = {name: [values.get(name, 0.25)] * len(times) for name in point_names}
@@ -64,6 +73,15 @@ def test_to_forecast_converts_to_celsius_and_picks_the_scenario_price():
     assert forecast.price == [0.21, 0.32]
 
 
+def test_to_forecast_passes_the_sunshine_through_when_asked_for():
+    payload = {
+        "time": [0], "TDryBul": [273.15], "HGloHor": [150.0], "LowerSetp[1]": [294.15],
+        "UpperSetp[1]": [297.15], "PriceElectricPowerDynamic": [0.2],
+    }
+
+    assert to_forecast(payload, "dynamic").solar_w_m2 == [150.0]
+
+
 def test_run_episode_sends_the_controller_setpoint_every_step_then_stops():
     client = FakeBoptest()
 
@@ -75,3 +93,13 @@ def test_run_episode_sends_the_controller_setpoint_every_step_then_stops():
     assert series["zone_temp_c"].iloc[0] == pytest.approx(21.0)
     assert series["setpoint_c"].iloc[-1] == pytest.approx(21.2)
     assert series["power_kw"].iloc[0] == pytest.approx(3.0)
+
+
+def test_run_episode_can_start_on_any_day_with_the_scenario_price():
+    client = FakeBoptest()
+
+    run_episode(client, FixedSetpointController(21.2), "unseen", "dynamic", steps=2, start_day=64)
+
+    assert client.initialized == 64 * 86400
+    assert client.price == "dynamic"
+    assert client.forecast_starts[0] == 64 * 86400

@@ -10,9 +10,15 @@ from edge_energy_optimizer.control.experiment import KPI_PATH, SERIES_DIR, TIME_
 from edge_energy_optimizer.forecasting.dataset import ROOT
 from edge_energy_optimizer.forecasting.explore import BLUE, GRID, INK, MUTED, ORANGE, SURFACE, style
 
+GREEN = "#1f9e6e"
+
 IMG_DIR = ROOT / "docs" / "img"
-COLORS = {"baseline": ORANGE, "predictive": BLUE}
-LABELS = {"baseline": "Baseline (fixed 21.2 °C)", "predictive": "Predictive"}
+COLORS = {"baseline": ORANGE, "predictive": BLUE, "mpc": GREEN}
+LABELS = {"baseline": "Baseline (fixed 21.2 °C)", "predictive": "Predictive", "mpc": "MPC"}
+SHORT_NAMES = {
+    "peak_heat_day": "Coldest", "typical_heat_day": "Typical",
+    "unseen_march": "Unseen, March", "unseen_october": "Unseen, October",
+}
 PERIOD_NAMES = {"peak_heat_day": "peak heating period", "typical_heat_day": "typical heating period"}
 # The time charts use the spot price scenario, where the price moves the most.
 PRICE = "highly_dynamic"
@@ -71,7 +77,7 @@ def plot_kpis() -> None:
     kpis = pd.read_csv(KPI_PATH)
     scenarios = kpis[["time_period", "electricity_price"]].drop_duplicates()
     names = [
-        f"{'Peak' if period == 'peak_heat_day' else 'Typical'}\n{price.replace('_', ' ')}"
+        f"{SHORT_NAMES[period]}\n{'day/night' if price == 'dynamic' else 'spot'}"
         for period, price in scenarios.itertuples(index=False)
     ]
     panels = {
@@ -79,16 +85,18 @@ def plot_kpis() -> None:
         "energy_kwh": "Energy (kWh)",
         "discomfort_kh": "Thermal discomfort (Kh)",
     }
-    fig, axes = plt.subplots(1, 3, figsize=(12, 4), facecolor=SURFACE)
+    fig, axes = plt.subplots(3, 1, figsize=(12, 10), facecolor=SURFACE)
     for ax, (column, title) in zip(axes, panels.items()):
         ax.set_facecolor(SURFACE)
-        for offset, name in zip((-0.2, 0.2), COLORS):
+        for offset, name in zip((-0.27, 0.0, 0.27), COLORS):
             values = kpis.loc[kpis["controller"] == name, column].to_numpy()
-            bars = ax.bar([x + offset for x in range(len(values))], values, width=0.36,
+            bars = ax.bar([x + offset for x in range(len(values))], values, width=0.26,
                           color=COLORS[name], label=LABELS[name])
             ax.bar_label(bars, fmt="%.0f" if values.max() >= 20 else "%.1f", fontsize=7,
                          color=MUTED, padding=2)
-        ax.set_xticks(range(len(names)), names)
+        ax.set_xticks(range(len(names)), names, fontsize=8)
+        # Separates the reported scenarios from the unseen ones.
+        ax.axvline(3.5, color=GRID, linewidth=1)
         ax.set_ylim(top=ax.get_ylim()[1] * 1.15)
         style(ax, title, "", "")
         ax.grid(axis="x", visible=False)

@@ -11,11 +11,16 @@ import pandas as pd
 from edge_energy_optimizer.control.base import Controller, Forecast, Observation
 from edge_energy_optimizer.control.baseline import FixedSetpointController
 from edge_energy_optimizer.control.boptest import BoptestClient
+from edge_energy_optimizer.control.mpc import MPCController
 from edge_energy_optimizer.control.predictive import PredictiveController
 
 TESTCASE = "bestest_hydronic_heat_pump"
 FLOOR_AREA_M2 = 192.0
 TIME_PERIODS = ["peak_heat_day", "typical_heat_day"]
+# Two-week periods no controller was designed or tuned on, given by their first day of the
+# year. Days 45 to 59 and 330 to 344 are taken by the thermal model's identification runs.
+UNSEEN_PERIODS = {"unseen_march": 64, "unseen_october": 300}
+WARMUP_S = 7 * 86400
 PRICE_POINTS = {
     "dynamic": "PriceElectricPowerDynamic",
     "highly_dynamic": "PriceElectricPowerHighlyDynamic",
@@ -23,6 +28,7 @@ PRICE_POINTS = {
 CONTROLLERS: dict[str, Controller] = {
     "baseline": FixedSetpointController(),
     "predictive": PredictiveController(),
+    "mpc": MPCController(),
 }
 
 STEP_S = 3600
@@ -44,6 +50,7 @@ def to_forecast(payload: dict, electricity_price: str) -> Forecast:
         upper_c=[k - KELVIN for k in payload["UpperSetp[1]"]],
         price=payload[PRICE_POINTS[electricity_price]],
         outdoor_c=[k - KELVIN for k in payload["TDryBul"]],
+        solar_w_m2=payload.get("HGloHor", []),
     )
 
 
@@ -58,12 +65,22 @@ def run_episode(
     time_period: str,
     electricity_price: str,
     steps: int = EPISODE_STEPS,
+    start_day: int | None = None,
 ) -> tuple[dict, pd.DataFrame]:
-    """Run one controller through one scenario. Returns the KPIs and a 15-minute time series."""
-    forecast_points = ["TDryBul", "LowerSetp[1]", "UpperSetp[1]", PRICE_POINTS[electricity_price]]
+    """Run one controller through one scenario. Returns the KPIs and a 15-minute time series.
+
+    With `start_day`, the run starts on that day of the year instead of at `time_period`,
+    which is then only a label."""
+    forecast_points = [
+        "TDryBul", "HGloHor", "LowerSetp[1]", "UpperSetp[1]", PRICE_POINTS[electricity_price]
+    ]
     client.select(TESTCASE)
     try:
-        measurements = client.set_scenario(time_period, electricity_price)
+        if start_day is None:
+            measurements = client.set_scenario(time_period, electricity_price)
+        else:
+            client.set_price(electricity_price)
+            measurements = client.initialize(start_day * 86400, WARMUP_S)
         start_s = measurements["time"]
         decisions = []
         for _ in range(steps):
@@ -112,11 +129,14 @@ def main() -> None:
     client = BoptestClient()
 
     rows = []
-    for time_period in TIME_PERIODS:
+    periods = {name: None for name in TIME_PERIODS} | UNSEEN_PERIODS
+    for time_period, start_day in periods.items():
         for electricity_price in PRICE_POINTS:
             for name, controller in CONTROLLERS.items():
                 print(f"Running {name} on {time_period} with {electricity_price} prices...")
-                kpis, series = run_episode(client, controller, time_period, electricity_price)
+                kpis, series = run_episode(
+                    client, controller, time_period, electricity_price, start_day=start_day
+                )
                 series.to_csv(SERIES_DIR / f"{name}_{time_period}_{electricity_price}.csv")
                 rows.append({
                     "time_period": time_period,

@@ -4,7 +4,7 @@ A controller sees one observation and one forecast, and answers with a zone
 temperature setpoint. It knows nothing about BOPTEST or any protocol.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
 
 
@@ -25,6 +25,8 @@ class Forecast:
     upper_c: list[float]
     price: list[float]
     outdoor_c: list[float]
+    # Global horizontal sunshine. Optional, so controllers that ignore the sun need not set it.
+    solar_w_m2: list[float] = field(default_factory=list)
 
 
 @runtime_checkable

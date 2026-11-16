@@ -54,6 +54,17 @@ A predictive controller heats a simulated family home (BOPTEST test case `bestes
 
 Most of the saving comes from not heating an empty home, and the settings were tuned on these same scenarios. The full summary and its limits are in [docs/results/phase2.md](docs/results/phase2.md).
 
+A model predictive controller (MPC) was added next. Every hour it plans 24 hours of heating with a fitted model of the house, then applies the first hour. To keep the test fair, all three controllers were also run on two periods none of them was built on:
+
+| Unseen period (two weeks) | Baseline | Predictive | MPC | MPC saved vs predictive |
+| --- | --- | --- | --- | --- |
+| From day 64, day/night tariff | 132.04 EUR | 113.10 EUR | **107.17 EUR** | 5.2% |
+| From day 64, spot prices | 123.19 EUR | 101.68 EUR | **98.31 EUR** | 3.3% |
+| From day 300, day/night tariff | 104.79 EUR | 96.33 EUR | **88.34 EUR** | 8.3% |
+| From day 300, spot prices | 99.37 EUR | 91.18 EUR | **85.74 EUR** | 6.0% |
+
+Discomfort was similar for all three. The house model predicts the next 24 hours to within 0.50 °C on unseen weeks, against 1.08 °C for assuming the temperature stays put. See [the MPC results](docs/results/phase2.md#mpc) and [decision 0004](docs/decisions/0004-mpc-controller.md).
+
 ## Running phase 1
 
 ```bash
@@ -92,7 +103,9 @@ BOPTEST then answers on `http://127.0.0.1:80`. The override file swaps the MinIO
 
 | Command | What it does |
 | --- | --- |
-| `uv run python -m edge_energy_optimizer.control.experiment` | Runs both controllers on all four scenarios (about 3 minutes) and saves the results |
+| `uv run python -m edge_energy_optimizer.control.identify` | Drives the heat pump with a random signal for four weeks to collect training data for the house model |
+| `uv run python -m edge_energy_optimizer.control.thermal_model` | Fits the house model and scores it against "temperature stays put" |
+| `uv run python -m edge_energy_optimizer.control.experiment` | Runs all three controllers on the four scenarios and two unseen periods (about 10 minutes) and saves the results. Needs the fitted house model |
 | `uv run python -m edge_energy_optimizer.control.report` | Draws the charts from the saved results |
 
 Stop BOPTEST when done:

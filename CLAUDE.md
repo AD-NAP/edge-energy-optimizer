@@ -1,6 +1,6 @@
 # edge-energy-optimizer
 
-Building energy optimization in 5 phases. Phases 1 (load forecasting) and 2 (control against BOPTEST) are done, phase 3 (BACnet and Modbus) is next. Phases 1 and 2 are due Sunday 11 October 2026.
+Building energy optimization in 5 phases. Phases 1 (load forecasting) and 2 (control against BOPTEST) are done, phase 3 (BACnet and Modbus) is next. Phase 2 has three controllers: a fixed baseline, a look-ahead heuristic, and MPC.
 
 ## Where things are
 - Vision and phases: `docs/architecture.md`. Choices made so far: `docs/decisions/`.
@@ -25,4 +25,4 @@ Claude builds in small steps. Before moving on, explain the one new concept with
 ## Watch-outs
 - The forecaster is trained on a real building, not the BOPTEST one, and phase 2 does not use it. Retrain the same pipeline on BOPTEST data when a later phase needs a load forecast.
 - The predictive controller's settings were tuned on the scenarios it is reported on. Rerun the experiment and say so when changing them.
-- Still open: whether to add an MPC controller.
+- The MPC controller needs `models/thermal_model.json` (gitignored). Recreate it with the `control.identify` and `control.thermal_model` modules. Its "off" setpoint rule was added after seeing the reported scenarios, so judge it on the unseen periods.

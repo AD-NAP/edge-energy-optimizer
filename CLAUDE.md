@@ -1,6 +1,6 @@
 # edge-energy-optimizer
 
-Building energy optimization in 5 phases. Phases 1 (load forecasting) and 2 (control against BOPTEST) are done, phase 3 (BACnet and Modbus) is next. Phase 2 has three controllers: a fixed baseline, a look-ahead heuristic, and MPC.
+Building energy optimization in 5 phases. Phases 1 (load forecasting) and 2 (control against BOPTEST) are done. Phases 3 to 5 are parked, with no plans for now. Phase 2 has three controllers: a fixed baseline, a look-ahead heuristic, and MPC.
 
 ## Where things are
 - Vision and phases: `docs/architecture.md`. Choices made so far: `docs/decisions/`.

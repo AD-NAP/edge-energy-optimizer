@@ -17,7 +17,7 @@ Everything runs against simulators, so you need no physical building, meter, or 
 
 ## Status
 
-Phases 1 (load forecasting) and 2 (control against a simulated building) are complete. Phase 3 is next.
+Phases 1 (load forecasting) and 2 (control against a simulated building) are complete. Phases 3 to 5 are parked, with no plans to pick them up for now.
 
 ## Phase 1 results
 
@@ -155,9 +155,9 @@ Always commit `pyproject.toml` and `uv.lock` together. Never edit `uv.lock` by h
 | --- | --- | --- |
 | 1 | Energy load forecasting (ML) | Done |
 | 2 | Control logic tested against a simulated building (BOPTEST) | Done |
-| 3 | BACnet and Modbus protocol integration | TBD |
-| 4 | Peak demand shaving with a simulated battery | TBD |
-| 5 | Edge deployment on k3s with MQTT and a dashboard | TBD |
+| 3 | BACnet and Modbus protocol integration | Parked |
+| 4 | Peak demand shaving with a simulated battery | Parked |
+| 5 | Edge deployment on k3s with MQTT and a dashboard | Parked |
 
 Each phase builds on the one before it and should leave the repo in a working, demonstrable state. See [docs/architecture.md](docs/architecture.md) for how the phases fit together.
 
